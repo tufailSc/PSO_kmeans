@@ -6,7 +6,7 @@ close all;
 
 dataSetName = 'testdata';
 folderNum = 5;
-filledScore = 0;
+filledScore = 0; %有些論文惠建議未評分項目填入評分區間的中間值
 userNum = 20;
 itemNum = 10;
 
@@ -18,6 +18,19 @@ k = 10;
 N = 4;
 similarity_threshold = 0.1;
 
+%實驗設定
+fprintf('選擇分群演算法:\n');
+fprintf('1) pso_kmeans\n');
+fprintf('2) kmeans\n');
+selectExperimentType = input('輸入分群演算法類型: ');
+switch selectExperimentType
+    case 1 %1) pso_kmeans
+        fprintf('選擇分群演算法: pso_kmeans\n')
+    case 2 %2) kmeans
+        fprintf('選擇分群演算法: kmeans\n')
+    otherwise
+        error('selectFeatureListType error!');
+end
 
 for foldCount = 1:folderNum
     
@@ -57,8 +70,16 @@ for foldCount = 1:folderNum
     % (1) 項目聚類(Item-based clustering)
     % 輸入： 用戶評分矩陣 userData(m, n) (m users, n items)，聚類個數 s，粒子數目 k
     % 輸出： s 個聚類及其中心
-    [overall_c, swarm_overall_pose] = pso_kmeans(userData', s, k);
     
+    switch selectExperimentType
+        case 1 %1) pso_kmeans
+            [overall_c, swarm_overall_pose] = pso_kmeans(userData', s, k);
+        case 2 %2) kmeans
+            [overall_c, swarm_overall_pose]  = kmeans(userData',s);
+        otherwise
+            error('selectFeatureListType error!');
+    end
+
     fprintf('Start generate specific item prediction score\n');
     
     % (2) 最近鄰搜索
