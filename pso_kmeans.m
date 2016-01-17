@@ -1,4 +1,4 @@
-function [ c, swarm_pos ] = pso_kmeans( userData, s, k )
+function [ overall_c, swarm_overall_pose ] = pso_kmeans( userData, s, k )
 % 輸入： 用戶評分矩陣 userData(m, n)，聚類個數 s，粒子數目 k
 % 輸出： s 個聚類及其中心
 
@@ -22,23 +22,16 @@ if write_video
 end
 
 % LOAD DEFAULT CLUSTER (IRIS DATASET); USE WITH CARE!
-%load fisheriris.mat
-filename = 'u1.base';
-delimiterIn = '\t';
-headerlinesIn = 0;
-A = importdata(filename,delimiterIn,headerlinesIn);
-A = A(:,1:3);
 
 
 %取第3,4欄
-meas = meas(:,1+dataset_subset:dimensions+dataset_subset); %RESIZE THE DATASET WITH CURRENT DIMENSIONS; USE WITH CARE!
-dataset_size = size(meas);
+dataset_size = size(userData);
 
 % EXECUTE K-MEANS
 % 用kmeans計算分群中心
 if hybrid_pso
     fprintf('Running Matlab K-Means Version\n');
-    [idx,KMEANS_CENTROIDS] = kmeans(meas,centroids, 'dist','sqEuclidean', 'display','iter','start','uniform','onlinephase','off');
+    [idx,KMEANS_CENTROIDS] = kmeans(userData,centroids, 'dist','sqEuclidean', 'display','iter','start','uniform','onlinephase','off');
     fprintf('\n');
 end
 
@@ -57,15 +50,15 @@ if plot_figure
     fh=figure(1);
     hold on;
     if dimensions == 3
-        plot3(meas(:,1),meas(:,2),meas(:,3),'k*');
+        plot3(userData(:,1),userData(:,2),userData(:,3),'k*');
         view(3);
     elseif dimensions == 2
-        plot(meas(:,1),meas(:,2),'k*');
+        plot(userData(:,1),userData(:,2),'k*');
     end
     
     % PLOT STUFF .. SETTING UP AXIS IN THE FIGURE
     axis equal;
-    axis(reshape([min(meas)-2; max(meas)+2],1,[]));
+    axis(reshape([min(userData)-2; max(userData)+2],1,[]));
     hold off;
     % ----------------
 end
@@ -77,8 +70,8 @@ swarm_pos = rand(centroids,dimensions,particles);
 swarm_best = zeros(centroids,dimensions);
 c = zeros(dataset_size(1),particles);
 
-ranges = max(meas)-min(meas); %%scale
-swarm_pos = swarm_pos .* repmat(ranges,[centroids,1,particles]) + repmat(min(meas),[centroids,1,particles]);
+ranges = max(userData)-min(userData); %%scale
+swarm_pos = swarm_pos .* repmat(ranges,[centroids,1,particles]) + repmat(min(userData),[centroids,1,particles]);
 swarm_fitness(1:particles)=Inf;
 
 % KMEANS_INIT
@@ -106,7 +99,7 @@ for iteration=1:iterations
             distance=zeros(dataset_size(1),1);
             for data_vector=1:dataset_size(1)
                 %meas(data_vector,:)
-                distance(data_vector,1)=norm(swarm_pos(centroid,:,particle)-meas(data_vector,:));
+                distance(data_vector,1)=norm(swarm_pos(centroid,:,particle)-userData(data_vector,:));
             end
             distances(:,centroid,particle)=distance;
         end
@@ -157,6 +150,7 @@ for iteration=1:iterations
     end
     [global_fitness, index] = min(swarm_fitness);       %GLOBAL BEST FITNESS
     swarm_overall_pose = swarm_pos(:,:,index);          %GLOBAL BEST POSITION
+    overall_c = c(:,index);
     
     % SOME INFO ON THE COMMAND WINDOW
     fprintf('%3d. global fitness is %5.4f\n',iteration,global_fitness);
@@ -191,7 +185,7 @@ for iteration=1:iterations
             distance=zeros(dataset_size(1),1);
             for data_vector=1:dataset_size(1)
                 %meas(data_vector,:)
-                distance(data_vector,1)=norm(swarm_pos(centroid,:,particle)-meas(data_vector,:));
+                distance(data_vector,1)=norm(swarm_pos(centroid,:,particle)-userData(data_vector,:));
             end
             distances(:,centroid,particle)=distance;
         end
@@ -203,7 +197,7 @@ for iteration=1:iterations
         % recalculated cluster centroids
         for centroid = 1 : centroids
             if any(c(:,particle) == centroid)
-                swarm_pos(centroid,:,particle) = mean(meas(c(:,particle)==centroid,:));
+                swarm_pos(centroid,:,particle) = mean(userData(c(:,particle)==centroid,:));
             end
         end   
         
@@ -219,9 +213,9 @@ if plot_figure
     for centroid=1:centroids
         if any(c(:,particle) == centroid)
             if dimensions == 3
-                plot3(meas(c(:,particle)==centroid,1),meas(c(:,particle)==centroid,2),meas(c(:,particle)==centroid,3),'o','color',cluster_colors(centroid));
+                plot3(userData(c(:,particle)==centroid,1),userData(c(:,particle)==centroid,2),userData(c(:,particle)==centroid,3),'o','color',cluster_colors(centroid));
             elseif dimensions == 2
-                plot(meas(c(:,particle)==centroid,1),meas(c(:,particle)==centroid,2),'o','color',cluster_colors(centroid));
+                plot(userData(c(:,particle)==centroid,1),userData(c(:,particle)==centroid,2),'o','color',cluster_colors(centroid));
             end
         end
     end
