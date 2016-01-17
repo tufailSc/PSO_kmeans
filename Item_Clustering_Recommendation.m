@@ -5,8 +5,8 @@ close all;
 %% 設定實驗參數
 
 dataSetName = 'testdata';
-folderNum = 5;
-filledScore = 0; %有些論文惠建議未評分項目填入評分區間的中間值
+foldNum = 5;
+filledScore = 0; %有些論文建議未評分項目填入評分區間的中間值
 userNum = 20;
 itemNum = 10;
 
@@ -25,14 +25,25 @@ fprintf('2) kmeans\n');
 selectExperimentType = input('輸入分群演算法類型: ');
 switch selectExperimentType
     case 1 %1) pso_kmeans
-        fprintf('選擇分群演算法: pso_kmeans\n')
+        fprintf('選擇分群演算法: pso_kmeans\n');
+        experimentName = 'pso_kmeans';
     case 2 %2) kmeans
-        fprintf('選擇分群演算法: kmeans\n')
+        fprintf('選擇分群演算法: kmeans\n');
+        experimentName = 'kmeans';
     otherwise
         error('selectFeatureListType error!');
 end
 
-for foldCount = 1:folderNum
+%建立存放實驗結果報表的資料夾
+dirpath = ['.'];
+if(~exist([dirpath '\exp_result' ],'dir'));
+    mkdir([dirpath '\exp_result' ]);
+end
+resultFileName = [dirpath '\exp_result\' dataSetName '_' experimentName '_result.xls'];
+resultData = [];
+
+foldMaeSum = 0;
+for foldCount = 1:foldNum
     
     %% 1. 形成用戶-項目矩陣，這是該算法最根本的數據結構
     
@@ -142,10 +153,28 @@ for foldCount = 1:folderNum
         absoluteError = abs(targetItemPredictionScore - targetItemScore);
         absoluteErrorSum = absoluteErrorSum + absoluteError;
         
-        fprintf('Testing data row %d has predicted completely, prediction score %.3f, score %.3f, absolute error %.3f\n', testDataRowCount, targetItemPredictionScore, targetItemScore, absoluteError);
+        resultData = [resultData; foldCount user targetItem targetItemScore targetItemPredictionScore absoluteError];
+        
+        fprintf('Fold %d testing data row %d has predicted completely, prediction score %.3f, score %.3f, absolute error %.3f\n',foldCount, testDataRowCount, targetItemPredictionScore, targetItemScore, absoluteError);
     end
     
-    mae = absoluteErrorSum/size(testData,1);
-    fprintf('MAE is %.3f\n',mae);
+    foldMae = absoluteErrorSum/size(testData,1);
+    fprintf('Fold %d MAE is %.3f\n',foldCount,foldMae);
+    
+    foldMaeSum = foldMaeSum + foldMae;
     
 end
+
+mae = foldMaeSum/foldNum;
+maeLabel = {'MAE'};
+txtLabel = {'fold', 'user', 'target item', 'item score', 'prediction score', 'absolute error'};
+
+fprintf('Writing file, please wait!\n');
+
+xlswrite(resultFileName, maeLabel, 'expResult', 'A1');
+xlswrite(resultFileName, mae, 'expResult', 'B1');
+xlswrite(resultFileName, txtLabel, 'expResult', 'A2');
+xlswrite(resultFileName, resultData, 'expResult', 'A3');
+
+fprintf('Done!\n');
+
