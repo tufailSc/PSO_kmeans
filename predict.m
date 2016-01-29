@@ -25,10 +25,12 @@ for neighborItemCount = 1:size(neighborItems,2)
     
 end
 
-score = targetItemAverageScore + (numerator/denominator);
-
-if isnan(score)
-    score = 0;
+if denominator == 0
+    score = targetItemAverageScore;
+else
+    score = targetItemAverageScore + (numerator/denominator);
 end
+
+
 end
 

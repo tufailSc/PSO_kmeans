@@ -70,6 +70,8 @@ for foldCount = 1:foldNum
     testData = importdata(testFileName,delimiterIn,headerlinesIn);
     testData = testData(:,1:3);
     
+    foldResultData = zeros(size(testData,1),6);
+    
     
     %% 2. 度量相似性
     % use pearson correlation coefficient
@@ -112,7 +114,7 @@ for foldCount = 1:foldNum
         targetItemData = userData(:,targetItem);
         for clusterCount = 1:size(swarm_overall_pose,1)
             clusterCentroid = swarm_overall_pose(clusterCount,:)';
-            similarity = corr(targetItemData, clusterCentroid, 'type', 'Pearson');
+            similarity = pearson(targetItemData, clusterCentroid);
             
             % b.1 選擇小於相似度閾值的聚類中心所在的聚類
             if similarity > similarity_threshold
@@ -134,7 +136,7 @@ for foldCount = 1:foldNum
         % b.2 對小於相似度閾值的聚類中心所在的聚類進行搜索，計算聚類內項目與目標項目的相似性
         for neighborItemCount = 1:size(clusterDataCollection,2)
             neighborItemData = clusterDataCollection(:, neighborItemCount);
-            similarityRec(neighborItemCount) = corr(targetItemData, neighborItemData, 'type', 'Pearson');
+            similarityRec(neighborItemCount) = pearson(targetItemData, neighborItemData);
         end
         
         % c. 找出與目標項目最相近的前 N 個鄰居作為目標項目的最近鄰居。
@@ -153,7 +155,7 @@ for foldCount = 1:foldNum
         absoluteError = abs(targetItemPredictionScore - targetItemScore);
         absoluteErrorSum = absoluteErrorSum + absoluteError;
         
-        resultData = [resultData; foldCount user targetItem targetItemScore targetItemPredictionScore absoluteError];
+        foldResultData(testDataRowCount,:) = [foldCount user targetItem targetItemScore targetItemPredictionScore absoluteError];
         
         fprintf('Fold %d testing data row %d has predicted completely, prediction score %.3f, score %.3f, absolute error %.3f\n',foldCount, testDataRowCount, targetItemPredictionScore, targetItemScore, absoluteError);
     end
@@ -162,6 +164,8 @@ for foldCount = 1:foldNum
     fprintf('Fold %d MAE is %.3f\n',foldCount,foldMae);
     
     foldMaeSum = foldMaeSum + foldMae;
+    
+    resultData = [resultData; foldResultData];
     
 end
 
