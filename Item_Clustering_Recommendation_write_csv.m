@@ -4,11 +4,11 @@ close all;
 
 %% 設定實驗參數
 
-dataSetName = 'testdata';
+dataSetName = 'ydata';
 foldNum = 5;
 filledScore = 0; %有些論文建議未評分項目填入評分區間的中間值
-userNum = 20;
-itemNum = 10;
+userNum = 7642;
+itemNum = 11916;
 
 % (1) 項目聚類(Item-based clustering)
 % 聚類個數 s，粒子數目 k

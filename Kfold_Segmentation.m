@@ -3,16 +3,20 @@ close all;
 
 delimiterIn = '\t'; %遇到以空白間隔時要換成' '
 headerlinesIn = 0;
-fileName = ['test_data.txt'];
+fileName = ['ydata.data'];
 data = importdata(fileName,delimiterIn,headerlinesIn);
 
 K = 5;
 observations = data(:,1);
-dataSetName = 'testdata';
+dataSetName = 'ydata';
+
+data;
 
 indices = crossvalind('Kfold',observations ,K);
 
 fprintf('Total data has %d data\n', size(observations,1));
+fprintf('User ID num: %d \n', max(data(:,1)));
+fprintf('Item ID num: %d \n', max(data(:,2)));
 
 for foldCount = 1:K
     test = (indices == foldCount);
