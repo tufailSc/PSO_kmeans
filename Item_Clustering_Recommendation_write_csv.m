@@ -107,10 +107,11 @@ for foldCount = 1:foldNum
         
         fprintf('Testing data row %d is predicting now, user %d, target item %d, score %d\n', testDataRowCount, user, targetItem, targetItemScore);
         
-        clusterDataCollection = [];
-        clusterItemsCollection = [];
+
+        clusterItemsCollection = zeros(1,size(allItems,2));
         
         % a. 計算目標項與每個聚類中心的相似性
+        clusterItemsCount = 1;
         targetItemData = userData(:,targetItem);
         for clusterCount = 1:size(swarm_overall_pose,1)
             clusterCentroid = swarm_overall_pose(clusterCount,:)';
@@ -123,14 +124,16 @@ for foldCount = 1:foldNum
                 temp_overall_c(targetItem) = 0;
                 itemIndex = (temp_overall_c == clusterCount);
                 
-                clusterData = userData(:,itemIndex);
                 clusterItems = allItems(itemIndex);
+                clusterItemsNum = size(clusterItems,2);
                 
-                clusterDataCollection = [clusterDataCollection clusterData];
-                clusterItemsCollection = [clusterItemsCollection clusterItems];
+                clusterItemsCollection( 1 , clusterItemsCount:(clusterItemsCount + clusterItemsNum-1) ) = clusterItems;
+                clusterItemsCount = clusterItemsCount + clusterItemsNum;
             end
         end
         
+        clusterItemsCollection = clusterItemsCollection(1,(clusterItemsCollection(1,:) ~= 0));
+        clusterDataCollection = userData(:,clusterItemsCollection);
         
         similarityRec = zeros(size(clusterDataCollection,2),1);
         % b.2 對小於相似度閾值的聚類中心所在的聚類進行搜索，計算聚類內項目與目標項目的相似性
